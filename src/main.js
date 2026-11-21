@@ -578,6 +578,7 @@ const game = new Phaser.Game(config);
 
 
 
+
 const APPS_SCRIPT_URL =
     'https://script.google.com/macros/s/AKfycbxiWDof0mmhObQwz08aM8qSPzlIdKTOzl6LnIJRjg-VAbBcOWIMQWhU-jZpI8yoyCF_vg/exec';
 
@@ -586,7 +587,9 @@ const loginForm = document.getElementById('login-form');
 const loginButton = document.getElementById('login-button');
 const loginError = document.getElementById('login-error');
 
+// Hidden iframe to receive the Apps Script response
 const bridgeFrame = document.createElement('iframe');
+bridgeFrame.name = 'libraryQuestBridge';
 bridgeFrame.style.display = 'none';
 document.body.appendChild(bridgeFrame);
 
@@ -606,13 +609,6 @@ window.addEventListener('message', (event) => {
     loginButton.disabled = false;
     loginButton.textContent = 'Enter the Library';
     loginRequestId = null;
-
-    if (data.type === 'LOGIN_ERROR') {
-        loginError.textContent =
-            'Unable to connect. Please try again later.';
-        console.error('Login error:', data.message);
-        return;
-    }
 
     if (data.type !== 'LOGIN_RESULT') return;
 
@@ -654,19 +650,30 @@ loginForm.addEventListener('submit', (event) => {
         String(Date.now()) + '-' +
         Math.random().toString(36).slice(2);
 
-    const request = {
-        type: 'LOGIN_REQUEST',
+    const form = document.createElement('form');
+
+    form.method = 'POST';
+    form.action = APPS_SCRIPT_URL;
+    form.target = bridgeFrame.name;
+    form.style.display = 'none';
+
+    const fields = {
         requestId: loginRequestId,
         studentId: studentId,
         pin: pin
     };
 
-    const bridgeURL =
-        APPS_SCRIPT_URL +
-        '?bridge=1#' +
-        encodeURIComponent(JSON.stringify(request));
+    Object.entries(fields).forEach(([name, value]) => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = name;
+        input.value = value;
+        form.appendChild(input);
+    });
 
-    bridgeFrame.src = bridgeURL;
+    document.body.appendChild(form);
+    form.submit();
+    form.remove();
 });
 
 
