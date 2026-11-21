@@ -577,44 +577,27 @@ const config = {
 const game = new Phaser.Game(config);
 
 
-// Apps Script communication bridge
+
 const APPS_SCRIPT_URL =
     'https://script.google.com/macros/s/AKfycbxiWDof0mmhObQwz08aM8qSPzlIdKTOzl6LnIJRjg-VAbBcOWIMQWhU-jZpI8yoyCF_vg/exec';
-
-const bridgeFrame = document.createElement('iframe');
-bridgeFrame.src = APPS_SCRIPT_URL + '?bridge=1';
-bridgeFrame.style.display = 'none';
-document.body.appendChild(bridgeFrame);
-
-let bridgeReady = false;
-
-bridgeFrame.addEventListener('load', () => {
-    bridgeReady = true;
-});
 
 // Login form
 const loginForm = document.getElementById('login-form');
 const loginButton = document.getElementById('login-button');
 const loginError = document.getElementById('login-error');
 
+const bridgeFrame = document.createElement('iframe');
+bridgeFrame.style.display = 'none';
+document.body.appendChild(bridgeFrame);
+
 let loginRequestId = null;
 
 window.addEventListener('message', (event) => {
-    const hostname = (() => {
-        try {
-            return new URL(event.origin).hostname;
-        } catch {
-            return '';
-        }
-    })();
-
     const validOrigin =
-        hostname === 'script.google.com' ||
-        hostname.endsWith('.googleusercontent.com');
+        event.origin === 'https://script.google.com' ||
+        event.origin.endsWith('.googleusercontent.com');
 
-    if (event.source !== bridgeFrame.contentWindow || !validOrigin) {
-        return;
-    }
+    if (!validOrigin) return;
 
     const data = event.data;
 
@@ -641,40 +624,50 @@ window.addEventListener('message', (event) => {
         return;
     }
 
-    // Load this student's marks into the game
     const scene = game.scene.getScene('LibraryScene');
     scene.loadStudentData(response.student);
 
-    // Hide the login screen
     document.getElementById('login-screen').style.display = 'none';
 });
 
 loginForm.addEventListener('submit', (event) => {
     event.preventDefault();
 
-    const studentId = document.getElementById('student-id').value.trim();
-    const pin = document.getElementById('student-pin').value.trim();
+    const studentId =
+        document.getElementById('student-id').value.trim();
+
+    const pin =
+        document.getElementById('student-pin').value.trim();
 
     loginError.textContent = '';
 
-    if (!bridgeReady) {
+    if (!studentId || !pin) {
         loginError.textContent =
-            'Connecting to the server. Please try again in a moment.';
+            'Please enter both Student ID and PIN.';
         return;
     }
 
     loginButton.disabled = true;
     loginButton.textContent = 'Checking credentials...';
 
-    loginRequestId = String(Date.now()) + '-' +
+    loginRequestId =
+        String(Date.now()) + '-' +
         Math.random().toString(36).slice(2);
 
-    bridgeFrame.contentWindow.postMessage({
+    const request = {
         type: 'LOGIN_REQUEST',
         requestId: loginRequestId,
         studentId: studentId,
         pin: pin
-    }, '*');
+    };
+
+    const bridgeURL =
+        APPS_SCRIPT_URL +
+        '?bridge=1#' +
+        encodeURIComponent(JSON.stringify(request));
+
+    bridgeFrame.src = bridgeURL;
 });
+
 
 
