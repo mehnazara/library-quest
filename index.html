@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Library Quest</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+
+  <body>
+    <div id="login-screen">
+      <div class="login-card">
+        <div class="login-icon">📚</div>
+        <h1>Library Quest</h1>
+        <p class="login-subtitle">Your academic journey awaits.</p>
+
+        <form id="login-form">
+          <label for="student-id">Student ID</label>
+          <input type="text" id="student-id"
+                 placeholder="Enter your Student ID"
+                 required autocomplete="username" />
+
+          <label for="student-pin">PIN</label>
+          <input type="password" id="student-pin"
+                 placeholder="Enter your 5-digit PIN"
+                 maxlength="5" inputmode="numeric"
+                 pattern="[0-9]{5}" required
+                 autocomplete="current-password" />
+
+          <p id="login-error"></p>
+          <button type="submit" id="login-button">
+            Enter the Library
+          </button>
+        </form>
+
+        <p class="login-footer">A little knowledge goes a long way.</p>
+      </div>
+    </div>
+
+    <div id="game-container"></div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

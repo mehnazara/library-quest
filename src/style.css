@@ -1,0 +1,130 @@
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: #211a17;
+    overflow: hidden;
+    font-family: Georgia, serif;
+}
+
+#game-container {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+canvas {
+    image-rendering: pixelated;
+}
+
+/* Login screen */
+
+#login-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background:
+        radial-gradient(circle at top, #66513b, transparent 65%),
+        #211a17;
+}
+
+.login-card {
+    width: min(420px, 90vw);
+    padding: 42px 36px;
+    background: #34251e;
+    border: 3px solid #d8b985;
+    border-radius: 12px;
+    box-shadow: 0 12px 40px #0008;
+    color: #fff4dc;
+    text-align: center;
+}
+
+.login-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+}
+
+.login-card h1 {
+    font-size: 32px;
+    color: #e8c994;
+    margin-bottom: 8px;
+}
+
+.login-subtitle {
+    color: #d0bda1;
+    font-size: 15px;
+    margin-bottom: 32px;
+}
+
+#login-form {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+}
+
+#login-form label {
+    font-size: 14px;
+    margin-bottom: 8px;
+    color: #e8c994;
+}
+
+#login-form input {
+    width: 100%;
+    padding: 13px;
+    margin-bottom: 20px;
+    border: 2px solid #80654b;
+    border-radius: 6px;
+    background: #211a17;
+    color: #fff4dc;
+    font-size: 15px;
+    outline: none;
+}
+
+#login-form input:focus {
+    border-color: #e8c994;
+}
+
+#login-button {
+    padding: 14px;
+    border: 2px solid #e8c994;
+    border-radius: 6px;
+    background: #806044;
+    color: #fff4dc;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+#login-button:hover {
+    background: #987653;
+}
+
+#login-button:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}
+
+#login-error {
+    min-height: 20px;
+    margin-bottom: 12px;
+    color: #ff9b85;
+    font-size: 13px;
+    text-align: center;
+}
+
+.login-footer {
+    margin-top: 26px;
+    color: #bba78d;
+    font-size: 12px;
+    font-style: italic;
+}
