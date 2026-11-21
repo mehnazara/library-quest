@@ -576,10 +576,78 @@ const config = {
 
 const game = new Phaser.Game(config);
 
+
+// Apps Script communication bridge
+const APPS_SCRIPT_URL =
+    'https://script.google.com/macros/s/AKfycbxiWDof0mmhObQwz08aM8qSPzlIdKTOzl6LnIJRjg-VAbBcOWIMQWhU-jZpI8yoyCF_vg/exec';
+
+const bridgeFrame = document.createElement('iframe');
+bridgeFrame.src = APPS_SCRIPT_URL + '?bridge=1';
+bridgeFrame.style.display = 'none';
+document.body.appendChild(bridgeFrame);
+
+let bridgeReady = false;
+
+bridgeFrame.addEventListener('load', () => {
+    bridgeReady = true;
+});
+
 // Login form
 const loginForm = document.getElementById('login-form');
 const loginButton = document.getElementById('login-button');
 const loginError = document.getElementById('login-error');
+
+let loginRequestId = null;
+
+window.addEventListener('message', (event) => {
+    const hostname = (() => {
+        try {
+            return new URL(event.origin).hostname;
+        } catch {
+            return '';
+        }
+    })();
+
+    const validOrigin =
+        hostname === 'script.google.com' ||
+        hostname.endsWith('.googleusercontent.com');
+
+    if (event.source !== bridgeFrame.contentWindow || !validOrigin) {
+        return;
+    }
+
+    const data = event.data;
+
+    if (!data || data.requestId !== loginRequestId) return;
+
+    loginButton.disabled = false;
+    loginButton.textContent = 'Enter the Library';
+    loginRequestId = null;
+
+    if (data.type === 'LOGIN_ERROR') {
+        loginError.textContent =
+            'Unable to connect. Please try again later.';
+        console.error('Login error:', data.message);
+        return;
+    }
+
+    if (data.type !== 'LOGIN_RESULT') return;
+
+    const response = data.response;
+
+    if (!response || !response.success) {
+        loginError.textContent =
+            response?.message || 'Login failed. Please try again.';
+        return;
+    }
+
+    // Load this student's marks into the game
+    const scene = game.scene.getScene('LibraryScene');
+    scene.loadStudentData(response.student);
+
+    // Hide the login screen
+    document.getElementById('login-screen').style.display = 'none';
+});
 
 loginForm.addEventListener('submit', (event) => {
     event.preventDefault();
@@ -589,48 +657,24 @@ loginForm.addEventListener('submit', (event) => {
 
     loginError.textContent = '';
 
-    loginButton.disabled = true;
-    loginButton.textContent = 'Checking credentials...';
-
-    // google.script.run is available when hosted by Apps Script
-    if (!window.google?.script?.run) {
+    if (!bridgeReady) {
         loginError.textContent =
-            'Please open the deployed Library Quest application to log in.';
-
-        loginButton.disabled = false;
-        loginButton.textContent = 'Enter the Library';
+            'Connecting to the server. Please try again in a moment.';
         return;
     }
 
-    google.script.run
-        .withSuccessHandler((response) => {
-            loginButton.disabled = false;
-            loginButton.textContent = 'Enter the Library';
+    loginButton.disabled = true;
+    loginButton.textContent = 'Checking credentials...';
 
-            if (!response || !response.success) {
-                loginError.textContent =
-                    response?.message || 'Login failed. Please try again.';
-                return;
-            }
+    loginRequestId = String(Date.now()) + '-' +
+        Math.random().toString(36).slice(2);
 
-            // Load this student's marks into the game
-            const scene = game.scene.getScene('LibraryScene');
-            scene.loadStudentData(response.student);
-
-            // Hide the login screen
-            document.getElementById('login-screen').style.display = 'none';
-        })
-
-        .withFailureHandler((error) => {
-            loginButton.disabled = false;
-            loginButton.textContent = 'Enter the Library';
-
-            loginError.textContent =
-                'Unable to connect. Please try again later.';
-
-            console.error('Login error:', error);
-        })
-
-        .loginStudent(studentId, pin);
+    bridgeFrame.contentWindow.postMessage({
+        type: 'LOGIN_REQUEST',
+        requestId: loginRequestId,
+        studentId: studentId,
+        pin: pin
+    }, '*');
 });
+
 
